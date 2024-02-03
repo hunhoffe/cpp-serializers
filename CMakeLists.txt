@@ -87,8 +87,8 @@ ExternalProject_Add(
     thrift
     PREFIX ${thrift_PREFIX}
     DEPENDS boost
-    URL "http://www-eu.apache.org/dist/thrift/0.12.0/thrift-0.12.0.tar.gz"
-    URL_MD5 "3deebbb4d1ca77dd9c9e009a1ea02183"
+    URL "https://dlcdn.apache.org/thrift/0.19.0/thrift-0.19.0.tar.gz"
+    URL_MD5 "f2074232cd80c83f30c030cb69ef68a8"
     CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${thrift_PREFIX}/src/thrift/configure --prefix=${thrift_PREFIX} --libdir=${thrift_PREFIX}/lib --with-boost=${Boost_INCLUDE_DIRS} --enable-shared=no --with-libevent=no --with-c_glib=no --with-java=no --with-erlang=no --with-python=no --with-perl=no --with-php=no --with-php_extension=no --with-ruby=no --with-haskell=no --with-go=no --with-d=no --with-lua=no --with-qt4=no --with-qt5=no --with-nodejs=no --with-cl=no --with-dotnetcore=no --with-nodets=no --with-rs=no --disable-tests --enable-plugin=no
     BUILD_COMMAND $(MAKE)
     INSTALL_COMMAND $(MAKE) install
