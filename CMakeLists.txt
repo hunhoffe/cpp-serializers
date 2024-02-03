@@ -55,8 +55,8 @@ set(CXXOPTS_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/cxxopts)
 ExternalProject_Add(
     cxxopts
     PREFIX ${CXXOPTS_PREFIX}
-    URL "https://github.com/jarro2783/cxxopts/archive/v2.1.2.tar.gz"
-    URL_MD5 "51af98ad0b7ec6fb7aa1cf96ea65fff8"
+    URL "https://github.com/jarro2783/cxxopts/archive/v3.1.1.tar.gz"
+    URL_MD5 "61b8bf0d8ab97fd55d67c7c25687b26d"
     CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CXXOPTS_PREFIX}
     LOG_UPDATE ON
     LOG_BUILD ON
