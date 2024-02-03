@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(cpp_serializers LANGUAGES CXX VERSION 0.1.0)
 
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -17,6 +17,8 @@ CHECK_CXX_COMPILER_FLAG("-std=c++14" CXX14)
 if (NOT CXX14)
     message(FATAL_ERROR "C++ compiler doesn't support C++14")
 endif()
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 CHECK_INCLUDE_FILES("inttypes.h" HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILES("netinet/in.h" HAVE_NETINET_IN_H)
@@ -89,7 +91,7 @@ ExternalProject_Add(
     DEPENDS boost
     URL "https://dlcdn.apache.org/thrift/0.19.0/thrift-0.19.0.tar.gz"
     URL_MD5 "f2074232cd80c83f30c030cb69ef68a8"
-    CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${thrift_PREFIX}/src/thrift/configure --prefix=${thrift_PREFIX} --libdir=${thrift_PREFIX}/lib --with-boost=${Boost_INCLUDE_DIRS} --enable-shared=no --with-libevent=no --with-c_glib=no --with-java=no --with-erlang=no --with-python=no --with-perl=no --with-php=no --with-php_extension=no --with-ruby=no --with-haskell=no --with-go=no --with-d=no --with-lua=no --with-qt4=no --with-qt5=no --with-nodejs=no --with-cl=no --with-dotnetcore=no --with-nodets=no --with-rs=no --disable-tests --enable-plugin=no
+    CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${thrift_PREFIX}/src/thrift/configure --prefix=${thrift_PREFIX} --libdir=${thrift_PREFIX}/lib --with-boost=${Boost_INCLUDE_DIRS} --enable-shared=no --with-libevent=no --with-c_glib=no --with-java=no --with-erlang=no --with-python=no --with-perl=no --with-php=no --with-php_extension=no --with-py3=no --with-ruby=no --with-haskell=no --with-go=no --with-d=no --with-lua=no --with-qt4=no --with-qt5=no --with-nodejs=no --with-cl=no --with-dotnetcore=no --with-nodets=no --with-rs=no --disable-tests --enable-plugin=no
     BUILD_COMMAND $(MAKE)
     INSTALL_COMMAND $(MAKE) install
     BUILD_IN_SOURCE 1
@@ -103,10 +105,11 @@ set(THRIFT_GENERATOR ${thrift_PREFIX}/bin/thrift)
 set(msgpack_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/msgpack)
 ExternalProject_Add(
     msgpack
+    DEPENDS boost
     PREFIX ${msgpack_PREFIX}
-    URL "https://github.com/msgpack/msgpack-c/releases/download/cpp-3.1.1/msgpack-3.1.1.tar.gz"
-    URL_MD5 "99ddfbc004576d5b5261a7f0e68962e7"
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${msgpack_PREFIX} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    URL "https://github.com/msgpack/msgpack-c/releases/download/cpp-6.1.0/msgpack-cxx-6.1.0.tar.gz"
+    URL_MD5 "55e04acee9c15d50f045354bccc9e70f"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${msgpack_PREFIX} -DBOOST_INCLUDEDIR=${boost_PREFIX}/include -DBOOST_LIBRARYDIR=${boost_PREFIX}/lib -DBoost_NO_SYSTEM_PATHS=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     BUILD_IN_SOURCE 1
     LOG_UPDATE ON
     LOG_BUILD ON
@@ -114,15 +117,27 @@ ExternalProject_Add(
 )
 set(MSGPACK_LIBRARIES ${msgpack_PREFIX}/lib/libmsgpackc.a)
 
+set(abseil_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/abseil)
+ExternalProject_Add(
+    abseil
+    PREFIX ${abseil_PREFIX}
+    URL "https://github.com/abseil/abseil-cpp/releases/download/20240116.0/abseil-cpp-20240116.0.tar.gz"
+    URL_MD5 "7ef2d5296eaf9389a9ab69261295dbd9"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${abseil_PREFIX} -DABSL_ENABLE_INSTALL=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    BUILD_IN_SOURCE 1
+    LOG_UPDATE ON
+    LOG_BUILD ON
+    LOG_INSTALL ON
+)
+
 set(protobuf_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/protobuf)
 ExternalProject_Add(
     protobuf
+    DEPENDS abseil
     PREFIX ${protobuf_PREFIX}
-    URL "https://github.com/protocolbuffers/protobuf/releases/download/v3.7.0/protobuf-cpp-3.7.0.tar.gz"
-    URL_MD5 "f1631a8e551e569273d78538f6ecf41c"
-    CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} ${protobuf_PREFIX}/src/protobuf/configure --prefix=${protobuf_PREFIX} --libdir=${protobuf_PREFIX}/lib --enable-shared=no
-    BUILD_COMMAND $(MAKE)
-    INSTALL_COMMAND $(MAKE) install
+    URL "https://github.com/protocolbuffers/protobuf/releases/download/v25.2/protobuf-25.2.tar.gz"
+    URL_MD5 "e88d7b35092caff53f9f03cc96a06232"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${protobuf_PREFIX} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_ABSL_PROVIDER=package -DCMAKE_PREFIX_PATH=${abseil_PREFIX}
     BUILD_IN_SOURCE 1
     LOG_UPDATE ON
     LOG_BUILD ON
@@ -135,8 +150,8 @@ set(capnproto_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/capnproto)
 ExternalProject_Add(
     capnproto
     PREFIX ${capnproto_PREFIX}
-    URL "https://github.com/capnproto/capnproto/archive/v0.7.0.tar.gz"
-    URL_MD5 "a9de5f042f4cf05515c2d7dfc7f5df21"
+    URL "https://github.com/capnproto/capnproto/archive/refs/tags/v1.0.2.tar.gz"
+    URL_MD5 "4dd1aaacff63781087e89097f9b02542"
     CONFIGURE_COMMAND CXX=${CMAKE_CXX_COMPILER} CC=${CMAKE_C_COMPILER} cd ${capnproto_PREFIX}/src/capnproto/c++ && ${AUTORECONF} -i && cd - && ${capnproto_PREFIX}/src/capnproto/c++/configure --prefix=${capnproto_PREFIX} --libdir=${capnproto_PREFIX}/lib --enable-shared=no
     BUILD_COMMAND $(MAKE)
     INSTALL_COMMAND $(MAKE) install
@@ -153,8 +168,8 @@ set(cereal_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/cereal)
 ExternalProject_Add(
     cereal
     PREFIX ${cereal_PREFIX}
-    URL "https://github.com/USCiLab/cereal/archive/v1.2.2.tar.gz"
-    URL_MD5 "4c56c7b9499dba79404250ef9a040481"
+    URL "https://github.com/USCiLab/cereal/archive/refs/tags/v1.3.2.tar.gz"
+    URL_MD5 "ab6070fadc7c50072ef4153fb1c46a87"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND mkdir -p ${cereal_PREFIX}/include/ && cp -r ${cereal_PREFIX}/src/cereal/include/cereal ${cereal_PREFIX}/include/
